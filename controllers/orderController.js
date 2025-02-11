@@ -6,6 +6,7 @@ exports.createOrder = async (req, res) => {
   try {
     const {
       name,
+      courierName,
       address,
       trackingId,
       customerAmount,
@@ -25,6 +26,7 @@ exports.createOrder = async (req, res) => {
     // Create order
     const order = new Order({
       name,
+      courierName,
       address,
       trackingId,
       customerAmount,
@@ -67,14 +69,30 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
-// Update Order
 exports.updateOrder = async (req, res) => {
   try {
-    const order = await Order.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    if (!order) return res.status(404).json({ message: "Order not found" });
-    res.status(200).json({ message: "Order updated successfully", order });
+    const { trackingId, courierName } = req.body; // Extract trackingId and courierName from the request body
+
+    // Ensure trackingId and courierName are provided for update
+    if (trackingId || courierName) {
+      const updateFields = {};
+
+      if (trackingId) updateFields.trackingId = trackingId;
+      if (courierName) updateFields.courierName = courierName;
+
+      const order = await Order.findByIdAndUpdate(req.params.id, updateFields, {
+        new: true,
+      });
+
+      if (!order) return res.status(404).json({ message: "Order not found" });
+      res.status(200).json({ message: "Order updated successfully", order });
+    } else {
+      return res
+        .status(400)
+        .json({
+          message: "Tracking ID or Courier Name must be provided for update",
+        });
+    }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
