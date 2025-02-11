@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const orderSchema = new mongoose.Schema(
   {
     name: { type: String },
+    courierName: { type: String },
     address: { type: String },
     trackingId: { type: String, unique: true },
     customerAmount: { type: Number },
