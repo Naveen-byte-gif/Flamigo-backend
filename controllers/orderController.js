@@ -1,4 +1,5 @@
 const Order = require("../models/Order");
+const upload = require("../middleware/upload");
 
 exports.createOrder = async (req, res) => {
   try {
@@ -47,30 +48,24 @@ exports.updateOrder = async (req, res) => {
   try {
     const { trackingId, courierName } = req.body;
 
-    if (trackingId || courierName) {
-      const updateFields = {};
+    let order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: "Order not found" });
 
-      if (trackingId) {
-        updateFields.trackingId = trackingId;
-        updateFields.shippedUnshippedStatus = true; // Automatically mark as shipped when updating
-      }
-      if (courierName) updateFields.courierName = courierName;
-
-      const order = await Order.findByIdAndUpdate(req.params.id, updateFields, {
-        new: true,
-      });
-
-      if (!order) return res.status(404).json({ message: "Order not found" });
-      res.status(200).json({ message: "Order updated successfully", order });
-    } else {
-      return res.status(400).json({
-        message: "Tracking ID or Courier Name must be provided for update",
-      });
+    if (trackingId) {
+      order.trackingId = trackingId;
+      order.shippedUnshippedStatus = true;
     }
+    if (courierName) order.courierName = courierName;
+
+    await order.save();
+
+    res.status(200).json({ message: "Order updated successfully", order });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
+
+// Update order by ID (including image and other fields)
 
 // Delete Order
 exports.deleteOrder = async (req, res) => {
@@ -82,9 +77,10 @@ exports.deleteOrder = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 exports.getOrdersByStatus = async (req, res) => {
   try {
-    const {status} = req.query; // Convert string to boolean
+    const { status } = req.query;
     const orders = await Order.find({ shippedUnshippedStatus: status });
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
@@ -94,12 +90,23 @@ exports.getOrdersByStatus = async (req, res) => {
 
 exports.getOrdersByContact = async (req, res) => {
   try {
-    const {contact} = req.query;
+    const { contact } = req.query;
     if (!contact) {
-      return res.status(400).json({ success: false, message: "Contact is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Contact is required" });
     }
     const orders = await Order.find({ contact });
     res.status(200).json({ success: true, data: orders });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+exports.getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.find(); // Fetch all orders from the database
+    res.status(200).json({ success: true, orders });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }

@@ -3,19 +3,19 @@ const upload = require("../middleware/upload");
 
 const {
   createOrder,
-  getOrders,
+  getAllOrders,
   getOrderById,
   updateOrder,
   deleteOrder,
   getOrdersByStatus,
-  getOrdersByContact
+  getOrdersByContact,
 } = require("../controllers/orderController");
 
 const router = express.Router();
 
 // Use image upload middleware for POST request to /orders
 router.post("/", upload.single("image"), createOrder); // 'image' is the form field name
-// router.get("/", getOrders);
+router.get("/", getAllOrders);
 // router.get("/:id", getOrderById);
 router.put("/:id", updateOrder);
 router.delete("/:id", deleteOrder);
