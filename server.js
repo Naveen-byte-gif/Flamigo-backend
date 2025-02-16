@@ -16,6 +16,7 @@ app.use(cors());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Routes
+
 app.use("/orders", orderRoutes);
 
 app.get("/", (req, res) => {
