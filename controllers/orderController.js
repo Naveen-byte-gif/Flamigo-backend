@@ -8,6 +8,7 @@ exports.createOrder = async (req, res) => {
       address,
       trackingId,
       amount,
+      link,
       shippedUnshippedStatus,
       noQuery,
       orderId,
@@ -29,6 +30,7 @@ exports.createOrder = async (req, res) => {
       noQuery,
       image,
       orderId,
+      link,
       orderDetails,
       receiverName,
       contact,
@@ -43,20 +45,30 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-// Update order by ID
 exports.updateOrder = async (req, res) => {
   try {
-    const { trackingId, courierName } = req.body;
+    const { trackingId, courierName, link } = req.body;
 
     let order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
+    // Update the trackingId and shipped status if trackingId is provided
     if (trackingId) {
       order.trackingId = trackingId;
       order.shippedUnshippedStatus = true;
     }
-    if (courierName) order.courierName = courierName;
 
+    // Update the courierName if it's provided
+    if (courierName) {
+      order.courierName = courierName;
+    }
+
+    // Update the link if it's provided
+    if (link) {
+      order.link = link;
+    }
+
+    // Save the updated order
     await order.save();
 
     res.status(200).json({ message: "Order updated successfully", order });

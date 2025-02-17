@@ -13,8 +13,7 @@ const {
 
 const router = express.Router();
 
-// Use image upload middleware for POST request to /orders
-router.post("/", upload.single("image"), createOrder); // 'image' is the form field name
+router.post("/", upload.single("image"), createOrder);
 router.get("/", getAllOrders);
 // router.get("/:id", getOrderById);
 router.put("/:id", updateOrder);
