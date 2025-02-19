@@ -1,24 +1,17 @@
-const express = require("express");
-const upload = require("../middleware/upload");
+import express from "express";
+import upload from "../utils/multerFun.js"; // Add .js extension
 
-const {
-  createOrder,
-  getAllOrders,
-  getOrderById,
-  updateOrder,
-  deleteOrder,
-  getOrdersByStatus,
-  getOrdersByContact,
-} = require("../controllers/orderController");
+import * as orderController from "../controllers/orderController.js"; // Add .js extension
 
-const router = express.Router();
+const Router = express.Router();
 
-router.post("/", upload.single("image"), createOrder);
-router.get("/", getAllOrders);
+Router.post("/",  orderController.createOrder);
+Router.get("/", orderController.getAllOrders);
 // router.get("/:id", getOrderById);
-router.put("/:id", updateOrder);
-router.delete("/:id", deleteOrder);
-router.get("/shippingStatus", getOrdersByStatus);
-router.get("/contact", getOrdersByContact);
+Router.put("/:id", orderController.updateOrder);
+Router.put("/uploadImage/:id", orderController.uploadImage);
+Router.delete("/:id", orderController.deleteOrder);
+Router.get("/shippingStatus", orderController.getOrdersByStatus);
+Router.get("/contact", orderController.getOrdersByContact);
 
-module.exports = router;
+export default Router;

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema(
   {
@@ -14,7 +14,7 @@ const orderSchema = new mongoose.Schema(
     trackingId: { type: String },
     shippedUnshippedStatus: { type: Boolean, default: false },
     noQuery: { type: Boolean, default: false },
-    image: { type: String },
+    image: [{ type: String }],
     gst: { type: Boolean, default: false },
   },
   {
@@ -24,4 +24,4 @@ const orderSchema = new mongoose.Schema(
 
 const Order = mongoose.model("Order", orderSchema);
 
-module.exports = Order;
+export default Order; // Use export default instead of module.exports
