@@ -1,26 +1,37 @@
-const express = require("express");
-const connectDB = require("./db");
-const orderRoutes = require("./routes/orderRoutes");
-const cors = require("cors");
-const path = require("path");
+import express from "express";
+import mongoose from "mongoose";
+import app from "./app.js";
+import dotenv from "dotenv";
 
-const app = express();
-const PORT = 5000;
+dotenv.config();
+import { execSync } from "child_process";
+const getCurrentBranch = () => {
+  return execSync("git rev-parse --abbrev-ref HEAD").toString().trim();
+};
 
-// Connect to MongoDB
-connectDB();
 
-// Middleware
-app.use(express.json());
-app.use(cors());
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+const currentBranch = getCurrentBranch();
+if (currentBranch === "prod") {
+    dotenv.config({ path: "./.env.production" });
+    console.log("Loaded production environment variables.");
+} else {
+    dotenv.config({ path: "./.env.development" });
+    console.log("Loaded development environment variables.");
+} 
+console.log('PORT:', process.env.PORT);  
 
-// Routes
+const DB = process.env.DATABASE.replace(
+  "<PASSWORD>",
+  process.env.DATABASE_PASSWORD
+);
+//console.log(DB);
+mongoose
+  .connect(DB)
+  .then(() => console.log("DB connection successful"))
+  .catch(err => console.error("DB connection error:", err));
 
-app.use("/orders", orderRoutes);
+  const PORT = process.env.PORT;
+  app.listen(process.env.PORT, () => {
+    console.log("server running on port", PORT);
+  });
 
-app.get("/", (req, res) => {
-  res.send("MongoDB is connected!");
-});
-
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

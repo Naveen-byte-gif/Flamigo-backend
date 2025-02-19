@@ -1,7 +1,11 @@
-const Order = require("../models/Order");
-const upload = require("../middleware/upload");
+import Order from "../models/orderModel.js"; // Ensure `.js` extension is included
+import fs from 'fs';
+import path from 'path';
+import getUploadPath from "../utils/pathFun.js"; 
+import multerWrapper from "../utils/multerFun.js"; 
 
-exports.createOrder = async (req, res) => {
+export const createOrder = async (req, res) => {
+
   try {
     const {
       courierName,
@@ -45,7 +49,8 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-exports.updateOrder = async (req, res) => {
+
+export const updateOrder = async (req, res) => {
   try {
     const { trackingId, courierName, link } = req.body;
 
@@ -76,7 +81,8 @@ exports.updateOrder = async (req, res) => {
 // Update order by ID (including image and other fields)
 
 // Delete Order
-exports.deleteOrder = async (req, res) => {
+
+export const deleteOrder = async (req, res) => {
   try {
     const order = await Order.findByIdAndDelete(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found" });
@@ -86,7 +92,8 @@ exports.deleteOrder = async (req, res) => {
   }
 };
 
-exports.getOrdersByStatus = async (req, res) => {
+
+export const getOrdersByStatus = async (req, res) => {
   try {
     const { status } = req.query;
     const orders = await Order.find({ shippedUnshippedStatus: status });
@@ -96,7 +103,8 @@ exports.getOrdersByStatus = async (req, res) => {
   }
 };
 
-exports.getOrdersByContact = async (req, res) => {
+
+export const getOrdersByContact = async (req, res) => {
   try {
     const { contact } = req.query;
     if (!contact) {
@@ -111,11 +119,56 @@ exports.getOrdersByContact = async (req, res) => {
   }
 };
 
-exports.getAllOrders = async (req, res) => {
+
+export const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find(); // Fetch all orders from the database
     res.status(200).json({ success: true, orders });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
+};
+
+
+export const uploadImage = async (req, res, next) => {
+  const upload = multerWrapper().array("image", 10);
+
+  upload(req, res, async (err) => {
+    if (err) return next(err);
+
+    try {
+      const { id } = req.params;
+      const order = await Order.findById(id);
+      if (!order) {
+        return next(new AppError("No order found with that ID", 404));
+      }
+      if (!req.files || req.files.length === 0) {
+        return next(new AppError("No files uploaded", 400));
+      }
+
+      // Ensure `order.image` is an array
+      if (!Array.isArray(order.image)) {
+        order.image = [];
+      }
+
+      // Save new files
+      const newFilePaths = req.files.map((file) => {
+        const { fullPath, relativePath } = getUploadPath( null,file.originalname, "orders");
+        fs.writeFileSync(fullPath, file.buffer);
+        return relativePath;
+      });
+
+      // Append new files to existing array
+      order.image.push(...newFilePaths);
+      await order.save();
+
+      res.status(200).json({
+        status: "success",
+        data: { order },
+        message: "Image updated successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
 };
