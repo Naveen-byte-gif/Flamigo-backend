@@ -107,17 +107,22 @@ export const getOrdersByStatus = async (req, res) => {
 export const getOrdersByContact = async (req, res) => {
   try {
     const { contact } = req.query;
+
     if (!contact) {
       return res
         .status(400)
         .json({ success: false, message: "Contact is required" });
     }
-    const orders = await Order.find({ contact });
+
+    // Fetch orders where contact matches and gst is true
+    const orders = await Order.find({ contact, gst: true });
+
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
 
 
 export const getAllOrders = async (req, res) => {
