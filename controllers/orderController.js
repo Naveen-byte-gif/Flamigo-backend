@@ -134,21 +134,23 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
-
 export const uploadImage = async (req, res, next) => {
   const upload = multerWrapper().array("image", 10);
 
   upload(req, res, async (err) => {
-    if (err) return next(err);
+    if (err) {
+      return res.status(500).json({ status: "error", message: "File upload failed", error: err.message });
+    }
 
     try {
       const { id } = req.params;
       const order = await Order.findById(id);
       if (!order) {
-        return next(new AppError("No order found with that ID", 404));
+        return res.status(404).json({ status: "error", message: "No order found with that ID" });
       }
+
       if (!req.files || req.files.length === 0) {
-        return next(new AppError("No files uploaded", 400));
+        return res.status(400).json({ status: "error", message: "No files uploaded" });
       }
 
       // Ensure `order.image` is an array
@@ -158,7 +160,7 @@ export const uploadImage = async (req, res, next) => {
 
       // Save new files
       const newFilePaths = req.files.map((file) => {
-        const { fullPath, relativePath } = getUploadPath( null,file.originalname, "orders");
+        const { fullPath, relativePath } = getUploadPath(null, file.originalname, "orders");
         fs.writeFileSync(fullPath, file.buffer);
         return relativePath;
       });
@@ -173,7 +175,7 @@ export const uploadImage = async (req, res, next) => {
         message: "Image updated successfully",
       });
     } catch (error) {
-      next(error);
+      res.status(500).json({ status: "error", message: "Internal server error", error: error.message });
     }
   });
 };
